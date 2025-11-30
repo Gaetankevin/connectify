@@ -54,6 +54,12 @@ export async function searchUsers(query: string): Promise<User[]> {
     credentials: "include",
   });
 
+  if (response.status === 401 || response.status === 403) {
+    // If the session/cookie disappeared, force a client redirect to login.
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
+
   if (!response.ok) {
     throw new Error("Failed to search users");
   }
@@ -74,6 +80,11 @@ export async function getConversations(): Promise<Conversation[]> {
     credentials: "include",
   });
 
+  if (response.status === 401 || response.status === 403) {
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
+
   if (!response.ok) {
     throw new Error("Failed to fetch conversations");
   }
@@ -93,6 +104,11 @@ export async function createConversation(otherUserId: number): Promise<Discussio
     body: JSON.stringify({ otherUserId }),
   });
 
+  if (response.status === 401 || response.status === 403) {
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
+
   if (!response.ok) {
     throw new Error("Failed to create conversation");
   }
@@ -109,6 +125,11 @@ export async function getMessages(
   const response = await fetch(`/api/conversations/${discussionId}`, {
     credentials: "include",
   });
+
+  if (response.status === 401 || response.status === 403) {
+    if (typeof window !== "undefined") window.location.href = "/login";
+    throw new Error("Unauthorized");
+  }
 
   if (!response.ok) {
     throw new Error("Failed to fetch messages");
@@ -151,6 +172,10 @@ export async function sendMessage(
   }
 
   if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      if (typeof window !== "undefined") window.location.href = "/login";
+      throw new Error("Unauthorized");
+    }
     throw new Error("Failed to send message");
   }
 

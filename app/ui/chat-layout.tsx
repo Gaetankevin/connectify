@@ -444,9 +444,9 @@ export default function ChatLayout() {
                 </button>
               </div>
               <div>
-                <h5 className="text-lg font-semibold text-gray-900 sm:hidden">
+                <h6 className="text-xs font-semibold text-gray-900">
                   {selectedConv.otherUser.name} {selectedConv.otherUser.surname}
-                </h5>
+                </h6>
                 <p className="text-xs text-gray-500 ">
                   @{selectedConv.otherUser.username}
                 </p>
