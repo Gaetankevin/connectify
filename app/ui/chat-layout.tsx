@@ -420,7 +420,7 @@ export default function ChatLayout() {
         {selectedConv && discussion ? (
           <>
             {/* Chat Header */}
-            <div className="border-b border-gray-200 bg-white px-6 py-4 flex items-center justify-between">
+            <div className="bg-white px-6 py-4 flex items-center justify-between">
               {/* Mobile back button */}
               <div className="flex items-center gap-3 md:hidden">
                 <button
@@ -444,10 +444,10 @@ export default function ChatLayout() {
                 </button>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h5 className="text-lg font-semibold text-gray-900 sm:hidden">
                   {selectedConv.otherUser.name} {selectedConv.otherUser.surname}
-                </h3>
-                <p className="text-xs text-gray-500">
+                </h5>
+                <p className="text-xs text-gray-500 ">
                   @{selectedConv.otherUser.username}
                 </p>
               </div>
@@ -536,7 +536,7 @@ export default function ChatLayout() {
                               className="w-full sm:w-48 h-32 object-cover"
                             />
                           ) : (
-                            <div className="w-full sm:w-48 h-32 flex items-center justify-center bg-gray-50 border rounded text-sm text-gray-600">
+                            <div className="w-full sm:w-48 h-32 flex items-center justify-center bg-gray-50rounded text-sm text-gray-600">
                               <div className="px-2 text-center">
                                 <div className="font-semibold truncate">
                                   {selectedFile.name}
