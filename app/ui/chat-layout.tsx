@@ -27,6 +27,8 @@ export default function ChatLayout() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesRef = useRef<Message[]>([]);
+  const [lastNotifiedMessageId, setLastNotifiedMessageId] = useState<number | null>(null);
 
   // Close mobile panel when resizing to desktop
   useEffect(() => {
@@ -55,7 +57,107 @@ export default function ChatLayout() {
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesRef.current = messages;
   }, [messages]);
+
+  // Request notification permission on mount (graceful)
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission().catch(() => {});
+      }
+    }
+  }, []);
+
+  // helper: play a short beep using WebAudio
+  const playBeep = () => {
+    try {
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = 880;
+      g.gain.value = 0.05;
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.start();
+      setTimeout(() => {
+        o.stop();
+        try { ctx.close(); } catch (e) {}
+      }, 150);
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const notifyNewMessage = (msg: Message, otherName?: string) => {
+    // avoid notifying about messages we've already notified
+    if (lastNotifiedMessageId === msg.id) return;
+    setLastNotifiedMessageId(msg.id);
+
+    // show desktop notification if permitted
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+      try {
+        const title = otherName ? otherName : "Nouveau message";
+        const body = msg.content ? msg.content : "Fichier joint";
+        const n = new Notification(title, { body, silent: true });
+        n.onclick = () => window.focus();
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // play a beep
+    playBeep();
+  };
+
+  // Polling: refresh conversations every 1s to simulate near-instant messaging
+  useEffect(() => {
+    const iv = setInterval(() => {
+      fetchConversations();
+    }, 1000);
+    return () => clearInterval(iv);
+  }, []);
+
+  // Poll messages for the selected conversation every 1s
+  useEffect(() => {
+    if (!selectedConvId) return;
+    let mounted = true;
+    const checker = async () => {
+      try {
+        const { discussion: d, messages: newMessages } = await getMessages(selectedConvId);
+        if (!mounted) return;
+
+        // if new last message exists and is different => update + possibly notify
+        const last = newMessages.length ? newMessages[newMessages.length - 1] : null;
+        const prevLast = messagesRef.current.length ? messagesRef.current[messagesRef.current.length - 1] : null;
+
+        // update state always to keep in sync
+        setDiscussion(d);
+        setMessages(newMessages);
+
+        if (last && (!prevLast || last.id !== prevLast.id)) {
+          // If the last message is from the other user, notify
+          const conv = conversations.find((c) => c.id === selectedConvId);
+          if (conv && last.senderId === conv.otherUser.id) {
+            notifyNewMessage(last, conv.otherUser.name);
+          }
+        }
+      } catch (e) {
+        // ignore polling errors
+      }
+    };
+
+    // run immediately then every second
+    checker();
+    const iv = setInterval(checker, 1000);
+    return () => {
+      mounted = false;
+      clearInterval(iv);
+    };
+  }, [selectedConvId, conversations]);
 
   // Create object URL for preview when a file is selected
   useEffect(() => {
