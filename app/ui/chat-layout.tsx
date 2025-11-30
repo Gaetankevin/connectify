@@ -123,9 +123,11 @@ export default function ChatLayout() {
   };
 
   // Polling: refresh conversations every 1s to simulate near-instant messaging
+  // Use "silent" mode so we don't toggle the global `loading` state or
+  // otherwise notify the user — updates should be visual only.
   useEffect(() => {
     const iv = setInterval(() => {
-      fetchConversations();
+      fetchConversations(true);
     }, 1000);
     return () => clearInterval(iv);
   }, []);
@@ -193,19 +195,22 @@ export default function ChatLayout() {
     };
   }, [selectedFile]);
 
-  const fetchConversations = async () => {
+  // fetchConversations supports a silent mode (used by the poller) to avoid
+  // toggling `loading` or otherwise creating visual noise while the list
+  // refreshes in the background.
+  const fetchConversations = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const convs = await getConversations();
       setConversations(convs);
       if (convs.length > 0 && !selectedConvId) {
         setSelectedConvId(convs[0].id);
       }
     } catch (err) {
-      setError("Failed to load conversations");
+      if (!silent) setError("Failed to load conversations");
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -347,9 +352,7 @@ export default function ChatLayout() {
 
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto divide-y divide-gray-200">
-          {loading ? (
-            <div className="p-4 text-center text-gray-500 text-sm">No conversations found</div>
-          ) : filteredConversations.length > 0 ? (
+          {filteredConversations.length > 0 ? (
             filteredConversations.map((conv) => (
               <button
                 key={conv.id}
