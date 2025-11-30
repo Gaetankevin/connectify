@@ -1,0 +1,57 @@
+[00:00:01.408] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:01.544] Server  LOG      ✓ Ready in 1215ms
+[00:00:20.125] Server  LOG      ○ Compiling /chat ...
+[00:00:21.728] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:00:21.883] Browser ERROR   A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HotReload globalError={[...]} webSocket={WebSocket} staticIndicatorState={{pathname:null, ...}}>
+      <AppDevOverlayErrorBoundary globalError={[...]}>
+        <ReplaySsrOnlyErrors>
+        <DevRootHTTPAccessFallbackBoundary>
+          <HTTPAccessFallbackBoundary notFound={<NotAllowedRootHTTPFallbackError>}>
+            <HTTPAccessFallbackErrorBoundary pathname="/chat" notFound={<NotAllowedRootHTTPFallbackError>} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <Head>
+                  <__next_root_layout_boundary__>
+                    <SegmentViewNode type="layout" pagePath="layout.tsx">
+                      <SegmentTrieNode>
+                      <link>
+                      <script>
+                      <RootLayout>
+                        <html lang="en">
+                          <body
+-                           cz-shortcut-listen="true"
+                          >
+                            <script>
+                            ...
+                              <SegmentViewNode type="layout" pagePath="chat/layou...">
+                                <SegmentTrieNode>
+                                <RootLayout>
+                                  <html lang="en">
+                                    <body
+-                                     cz-shortcut-listen="true"
+                                    >
+                  ...
+
+[00:03:27.872] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[00:04:15.220] Server  LOG      ✓ Compiled in 99ms
+[00:04:51.970] Server  LOG      ✓ Compiled in 126ms
+[00:08:03.286] Server  LOG      ✓ Compiled in 40ms
+[00:08:51.579] Server  LOG      ✓ Compiled in 28ms
+[00:08:54.891] Server  LOG      ✓ Compiled in 66ms
+[00:09:09.805] Server  LOG      ✓ Compiled in 119ms
+[00:09:24.360] Server  LOG      ✓ Compiled in 54ms
+[00:09:39.961] Server  LOG      ✓ Compiled in 66ms
+[00:14:54.367] Server  LOG      ✓ Compiled in 70ms

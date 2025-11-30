@@ -1,0 +1,41 @@
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "biome check",
+    "format": "biome format --write"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.0.1",
+    "@prisma/client": "^7.0.1",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.3",
+    "next": "^16.0.4",
+    "pg": "^8.16.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
+    "@types/node": "^24.10.1",
+    "@types/pg": "^8.15.6",
+    "@types/react": "19.2.7",
+    "prisma": "^7.0.1",
+    "tailwindcss": "^4.1.17",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  },
+  "compilerOptions": {
+    "baseUrl": "src/",
+    "paths": {
+      "@/styles/*": [
+        "styles/*"
+      ],
+      "@/components/*": [
+        "components/*"
+      ]
+    }
+  }
+}

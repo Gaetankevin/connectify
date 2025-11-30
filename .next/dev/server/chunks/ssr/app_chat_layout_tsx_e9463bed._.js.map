@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/gaetan/Bureau/ReactJS%20Experiences/hello-prisma/app/chat/layout.tsx"],"sourcesContent":["import '../globals.css'\n \nexport default function RootLayout({\n  children,\n}: {\n  children: React.ReactNode\n}) {\n  return (\n    <html lang=\"en\">\n      <body>\n        {/* Inline script to remove attributes some browser extensions inject\n            (e.g. cz-shortcut-listen) before React hydrates to avoid\n            hydration mismatch warnings in dev. */}\n        <script\n          dangerouslySetInnerHTML={{\n            __html: `(() => {\n              try {\n                const attrs = ['cz-shortcut-listen'];\n                if (typeof document !== 'undefined' && document.body) {\n                  attrs.forEach(a => document.body.hasAttribute(a) && document.body.removeAttribute(a));\n                }\n              } catch (e) { /* ignore */ }\n            })();`,\n          }}\n        />\n        {children}\n      </body>\n    </html>\n  )\n}"],"names":[],"mappings":";;;;;;;AAEe,SAAS,WAAW,EACjC,QAAQ,EAGT;IACC,qBACE,8OAAC;QAAK,MAAK;kBACT,cAAA,8OAAC;;8BAIC,8OAAC;oBACC,yBAAyB;wBACvB,QAAQ,CAAC;;;;;;;iBAOJ,CAAC;oBACR;;;;;;gBAED;;;;;;;;;;;;AAIT"}}]
+}
