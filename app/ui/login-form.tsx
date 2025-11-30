@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
@@ -167,6 +167,7 @@ export default function LoginForm() {
             </div>
           )}
         </form>
+        <p>Pas encore de compte ? <Link href="/register">Créer un compte</Link></p>
       </div>
     </div>
   );
