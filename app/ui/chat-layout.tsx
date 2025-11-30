@@ -28,7 +28,9 @@ export default function ChatLayout() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<Message[]>([]);
-  const [lastNotifiedMessageId, setLastNotifiedMessageId] = useState<number | null>(null);
+  const [lastNotifiedMessageId, setLastNotifiedMessageId] = useState<
+    number | null
+  >(null);
 
   // Close mobile panel when resizing to desktop
   useEffect(() => {
@@ -72,7 +74,8 @@ export default function ChatLayout() {
   // helper: play a short beep using WebAudio
   const playBeep = () => {
     try {
-      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const AudioCtx =
+        (window as any).AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;
       const ctx = new AudioCtx();
       const o = ctx.createOscillator();
@@ -85,7 +88,9 @@ export default function ChatLayout() {
       o.start();
       setTimeout(() => {
         o.stop();
-        try { ctx.close(); } catch (e) {}
+        try {
+          ctx.close();
+        } catch (e) {}
       }, 150);
     } catch (e) {
       // ignore
@@ -98,7 +103,11 @@ export default function ChatLayout() {
     setLastNotifiedMessageId(msg.id);
 
     // show desktop notification if permitted
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+    if (
+      typeof window !== "undefined" &&
+      "Notification" in window &&
+      Notification.permission === "granted"
+    ) {
       try {
         const title = otherName ? otherName : "Nouveau message";
         const body = msg.content ? msg.content : "Fichier joint";
@@ -127,12 +136,18 @@ export default function ChatLayout() {
     let mounted = true;
     const checker = async () => {
       try {
-        const { discussion: d, messages: newMessages } = await getMessages(selectedConvId);
+        const { discussion: d, messages: newMessages } = await getMessages(
+          selectedConvId
+        );
         if (!mounted) return;
 
         // if new last message exists and is different => update + possibly notify
-        const last = newMessages.length ? newMessages[newMessages.length - 1] : null;
-        const prevLast = messagesRef.current.length ? messagesRef.current[messagesRef.current.length - 1] : null;
+        const last = newMessages.length
+          ? newMessages[newMessages.length - 1]
+          : null;
+        const prevLast = messagesRef.current.length
+          ? messagesRef.current[messagesRef.current.length - 1]
+          : null;
 
         // update state always to keep in sync
         setDiscussion(d);
@@ -333,7 +348,7 @@ export default function ChatLayout() {
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto divide-y divide-gray-200">
           {loading ? (
-            <div className="p-4 text-center text-gray-500">Loading...</div>
+            <div className="p-4 text-center text-gray-500 text-sm">No conversations found</div>
           ) : filteredConversations.length > 0 ? (
             filteredConversations.map((conv) => (
               <button
@@ -611,7 +626,9 @@ export default function ChatLayout() {
                     type="submit"
                     aria-label={sendingMessage ? "Envoi en cours" : "Envoyer"}
                     title={sendingMessage ? "Envoi en cours" : "Envoyer"}
-                    disabled={sendingMessage || (!messageInput.trim() && !selectedFile)}
+                    disabled={
+                      sendingMessage || (!messageInput.trim() && !selectedFile)
+                    }
                     className="bg-indigo-600 text-white p-3 rounded-lg hover:bg-indigo-700 transition disabled:bg-gray-400 flex items-center justify-center"
                   >
                     {sendingMessage ? (
@@ -623,8 +640,19 @@ export default function ChatLayout() {
                         xmlns="http://www.w3.org/2000/svg"
                         aria-hidden
                       >
-                        <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.25)" strokeWidth="4" />
-                        <path d="M22 12a10 10 0 00-10-10" stroke="white" strokeWidth="4" strokeLinecap="round" />
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="rgba(255,255,255,0.25)"
+                          strokeWidth="4"
+                        />
+                        <path
+                          d="M22 12a10 10 0 00-10-10"
+                          stroke="white"
+                          strokeWidth="4"
+                          strokeLinecap="round"
+                        />
                       </svg>
                     ) : (
                       // paper plane icon
@@ -635,8 +663,21 @@ export default function ChatLayout() {
                         xmlns="http://www.w3.org/2000/svg"
                         aria-hidden
                       >
-                        <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M22 2l-7 20  -4-9-9-4 20-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="rgba(255,255,255,0.03)" />
+                        <path
+                          d="M22 2L11 13"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M22 2l-7 20  -4-9-9-4 20-7z"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          fill="rgba(255,255,255,0.03)"
+                        />
                       </svg>
                     )}
                   </button>
@@ -661,7 +702,7 @@ export default function ChatLayout() {
                 />
               </svg>
               <p className="text-gray-500 text-lg">
-                {loading ? "Loading..." : "Select a conversation to start"}
+                Select a conversation to start
               </p>
             </div>
           </div>
