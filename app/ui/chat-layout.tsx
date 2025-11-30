@@ -511,7 +511,7 @@ export default function ChatLayout() {
               </div>
 
               {/* Input Area - stays at bottom */}
-              <div className="border-t border-gray-200 bg-white px-6 py-4">
+              <div className=" bg-white px-6 py-4">
                 {error && (
                   <div className="mb-3 p-2 bg-red-100 text-red-700 text-sm rounded">
                     {error}
