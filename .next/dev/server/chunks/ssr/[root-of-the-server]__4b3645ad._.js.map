@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 18, "column": 0}, "map": {"version":3,"sources":["file:///home/gaetan/Bureau/ReactJS%20Experiences/hello-prisma/app/chat/page.tsx"],"sourcesContent":["export default function ChatPage(){\n    return <h1>Chat Page</h1>\n}"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACpB,qBAAO,8OAAC;kBAAG;;;;;;AACf"}}]
-}
