@@ -93,14 +93,17 @@ export default function SignUpForm() {
 
   async function checkUsernameAvailable(username: string) {
     try {
+      console.log('[checkUsernameAvailable] Checking:', username)
       const res = await fetch('/api/username/check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username })
       })
       const data = await res.json()
+      console.log('[checkUsernameAvailable] Response:', data)
       return data?.available === true
     } catch (e) {
+      console.error('[checkUsernameAvailable] Error:', e)
       return false
     }
   }
@@ -183,18 +186,25 @@ export default function SignUpForm() {
   }
 
   async function fetchSuggestions() {
-    if (!values.name && !values.surname) return
+    if (!values.name && !values.surname) {
+      console.log('[fetchSuggestions] Skipped: no name or surname')
+      return
+    }
     setSuggestLoading(true)
     setSuggestions(null)
     try {
+      console.log('[fetchSuggestions] Fetching with:', { name: values.name, surname: values.surname })
       const res = await fetch('/api/username/suggest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: values.name, surname: values.surname })
       })
       const data = await res.json()
+      console.log('[fetchSuggestions] Response:', data)
       setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : [])
+      console.log('[fetchSuggestions] Set suggestions to:', Array.isArray(data.suggestions) ? data.suggestions : [])
     } catch (e) {
+      console.error('[fetchSuggestions] Error:', e)
       setSuggestions([])
     } finally {
       setSuggestLoading(false)
@@ -249,37 +259,49 @@ export default function SignUpForm() {
                 </Alert>
               )}
 
-              {/* username suggestions */}
+              {/* username suggestions - always available */}
               {current.key === "username" && (
-                <div className="space-y-3">
-                  <Button
-                    type="button"
-                    onClick={fetchSuggestions}
-                    disabled={suggestLoading || (!values.name && !values.surname)}
-                    variant="outline"
-                    size="sm"
-                    className="w-full border-slate-600 text-slate-300 hover:bg-slate-700"
-                  >
-                    {suggestLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {suggestLoading ? "Génération..." : "Suggérer des usernames"}
-                  </Button>
+                <div className="space-y-3 pt-2">
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      onClick={fetchSuggestions}
+                      disabled={suggestLoading || (!values.name && !values.surname)}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 border-indigo-500/50 text-indigo-300 hover:bg-indigo-600/20 hover:border-indigo-500"
+                    >
+                      {suggestLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {suggestLoading ? "Génération..." : "Suggérer"}
+                    </Button>
+                  </div>
 
                   {suggestions && suggestions.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {suggestions.map((s) => (
-                        <Badge
-                          key={s}
-                          variant="secondary"
-                          className="cursor-pointer hover:bg-indigo-600 bg-indigo-500/20 text-indigo-300 border-indigo-500/50"
-                          onClick={() => {
-                            setValues((p) => ({ ...p, username: s }));
-                            setSuggestions(null);
-                            setError(null);
-                          }}
-                        >
-                          {s}
-                        </Badge>
-                      ))}
+                    <div className="space-y-2 rounded-lg bg-indigo-900/20 border border-indigo-500/30 p-3">
+                      <p className="text-xs text-indigo-300 font-medium">Suggestions disponibles :</p>
+                      <div className="flex flex-wrap gap-2">
+                        {suggestions.map((s) => (
+                          <Badge
+                            key={s}
+                            variant="secondary"
+                            className="cursor-pointer hover:bg-indigo-600 hover:text-white transition bg-indigo-500/30 text-indigo-200 border-indigo-500/50"
+                            onClick={() => {
+                              setValues((p) => ({ ...p, username: s }));
+                              setSuggestions(null);
+                              setError(null);
+                            }}
+                          >
+                            {s}
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-xs text-slate-400">Cliquez sur une suggestion pour la sélectionner</p>
+                    </div>
+                  )}
+
+                  {suggestions?.length === 0 && !suggestLoading && (
+                    <div className="rounded-lg bg-yellow-900/20 border border-yellow-600/30 p-3">
+                      <p className="text-xs text-yellow-300">Aucune suggestion générée. Entrez manuellement un username.</p>
                     </div>
                   )}
                 </div>
