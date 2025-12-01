@@ -1,6 +1,15 @@
 "use client";
 
+import { ModeToggle } from "@/components/swetch-theme";
 import { useState, useEffect, useRef } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Loader2, Send, Plus, Search, Paperclip, X } from "lucide-react";
 import {
   getConversations,
   searchUsers,
@@ -241,6 +250,8 @@ export default function ChatLayout() {
   const handleStartConversation = async (userId: number) => {
     try {
       setSendingMessage(true);
+      const toastId = toast.loading("Création de la conversation...");
+      
       const conv = await createConversation(userId);
 
       // Refresh conversations
@@ -251,8 +262,12 @@ export default function ChatLayout() {
       setShowNewConvModal(false);
       setNewConvSearch("");
       setSearchedUsers([]);
+      
+      toast.dismiss(toastId);
+      toast.success("Conversation créée ✓");
     } catch (err) {
-      setError("Failed to create conversation");
+      const errorMsg = err instanceof Error ? err.message : "Impossible de créer la conversation";
+      toast.error(errorMsg);
       console.error(err);
     } finally {
       setSendingMessage(false);
@@ -267,6 +282,8 @@ export default function ChatLayout() {
 
     try {
       setSendingMessage(true);
+      const toastId = toast.loading("Envoi du message...");
+      
       const newMsg = await sendMessage(selectedConvId, {
         content: messageInput.trim() || undefined,
         file: selectedFile || undefined,
@@ -279,8 +296,12 @@ export default function ChatLayout() {
 
       // Refresh conversations to update "last message"
       await fetchConversations();
+      
+      toast.dismiss(toastId);
+      toast.success("Message envoyé ✓");
     } catch (err) {
-      setError("Failed to send message");
+      const errorMsg = err instanceof Error ? err.message : "Impossible d'envoyer le message";
+      toast.error(errorMsg);
       console.error(err);
     } finally {
       setSendingMessage(false);
@@ -319,6 +340,7 @@ export default function ChatLayout() {
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900">Messages</h2>
+            <ModeToggle />
             <button
               onClick={() => setShowNewConvModal(true)}
               className="bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 transition"

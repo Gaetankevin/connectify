@@ -1,4 +1,6 @@
+import { ThemeProvider } from "next-themes"
 import { Analytics } from "@vercel/analytics/next"
+import { Toaster } from 'sonner'
 import './globals.css'
  
 export default function RootLayout({
@@ -25,7 +27,15 @@ export default function RootLayout({
           }}
         />
         <Analytics />
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+          <Toaster position="bottom-right" theme="dark" />
+        </ThemeProvider>
       </body>
     </html>
   )

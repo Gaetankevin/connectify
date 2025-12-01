@@ -5,6 +5,12 @@ import { useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "../actions/auth";
 import { LoginFormSchema } from "../lib/definitions";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 type StepKey = "username_email" | "password";
 
@@ -89,86 +95,118 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6">
-        <h1 className="text-center text-2xl font-bold mb-4">Se connecter</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <Card className="w-full max-w-md shadow-2xl border-slate-700 bg-slate-800">
+        <CardHeader className="space-y-2 text-center">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent">
+            Connectify
+          </CardTitle>
+          <CardDescription className="text-slate-300">
+            Connectez-vous à votre compte
+          </CardDescription>
+        </CardHeader>
 
-        <form action={action} method="post" className="space-y-6">
-          {/* progress */}
-          <div className="flex items-center gap-2 justify-center">
-            {steps.map((s, i) => (
-              <div
-                key={s.key}
-                className={`h-2 w-8 rounded ${
-                  i <= stepIndex ? "bg-indigo-600" : "bg-gray-200"
-                }`}
-              ></div>
-            ))}
-          </div>
-
-          {/* visible field */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {current.label}
-            </label>
-            <input
-              autoFocus
-              name={current.key}
-              value={values[current.key]}
-              onChange={onChange}
-              type={current.type ?? "text"}
-              placeholder={current.placeholder}
-              className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-            {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
-          </div>
-
-          {/* hidden fields so final submit contains everything */}
-          {Object.entries(values).map(([k, v]) => (
-            <input key={k} type="hidden" name={k} value={v} />
-          ))}
-
-          <div className="flex justify-between">
-            <button
-              type="button"
-              onClick={onBack}
-              disabled={stepIndex === 0}
-              className="px-4 py-2 rounded-lg border disabled:opacity-50"
-            >
-              Retour
-            </button>
-            {stepIndex < steps.length - 1 ? (
-              <button
-                type="button"
-                onClick={onNext}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
-              >
-                Suivant
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={pending}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
-              >
-                {pending ? "Connexion..." : "Se connecter"}
-              </button>
-            )}
-          </div>
-
-          {state?.message && <p className="text-green-600">{state.message}</p>}
-          {state?.errors && (
-            <div className="text-red-600 text-sm">
-              {Object.entries(state.errors).map(([k, v]) => (
-                <p key={k}>
-                  {k}: {Array.isArray(v) ? v.join(", ") : v}
-                </p>
+        <CardContent>
+          <form action={action} method="post" className="space-y-6">
+            {/* progress bar */}
+            <div className="flex items-center gap-1 justify-center">
+              {steps.map((s, i) => (
+                <div
+                  key={s.key}
+                  className={`h-1 flex-1 rounded transition-colors ${
+                    i <= stepIndex ? "bg-indigo-500" : "bg-slate-600"
+                  }`}
+                ></div>
               ))}
             </div>
-          )}
-        </form>
-        <p>Pas encore de compte ? <Link href="/register">Créer un compte</Link></p>
-      </div>
+
+            {/* visible field */}
+            <div className="space-y-2">
+              <Label htmlFor={current.key} className="text-slate-200">
+                {current.label}
+              </Label>
+              <Input
+                autoFocus
+                id={current.key}
+                name={current.key}
+                value={values[current.key]}
+                onChange={onChange}
+                type={current.type ?? "text"}
+                placeholder={current.placeholder}
+                className="border-slate-600 bg-slate-700 text-white placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500"
+              />
+              {error && (
+                <Alert variant="destructive" className="bg-red-900/20 border-red-700">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="text-red-300">{error}</AlertDescription>
+                </Alert>
+              )}
+            </div>
+
+            {/* hidden fields */}
+            {Object.entries(values).map(([k, v]) => (
+              <input key={k} type="hidden" name={k} value={v} />
+            ))}
+
+            <div className="flex justify-between gap-3">
+              <Button
+                type="button"
+                onClick={onBack}
+                disabled={stepIndex === 0}
+                variant="outline"
+                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+              >
+                Retour
+              </Button>
+              {stepIndex < steps.length - 1 ? (
+                <Button
+                  type="button"
+                  onClick={onNext}
+                  className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white"
+                >
+                  Suivant
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  disabled={pending}
+                  className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white"
+                >
+                  {pending ? "Connexion..." : "Se connecter"}
+                </Button>
+              )}
+            </div>
+
+            {state?.message && (
+              <Alert className="bg-green-900/20 border-green-700">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <AlertDescription className="text-green-300">{state.message}</AlertDescription>
+              </Alert>
+            )}
+            {state?.errors && (
+              <Alert variant="destructive" className="bg-red-900/20 border-red-700">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <ul className="text-red-300 text-sm space-y-1">
+                    {Object.entries(state.errors).map(([k, v]) => (
+                      <li key={k}>
+                        <span className="font-medium">{k}:</span> {Array.isArray(v) ? v.join(", ") : v}
+                      </li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+          </form>
+
+          <div className="mt-6 text-center text-sm text-slate-400">
+            Pas encore de compte ?{" "}
+            <Link href="/register" className="text-indigo-400 hover:text-indigo-300 font-medium">
+              Créer un compte
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
