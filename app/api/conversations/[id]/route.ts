@@ -3,10 +3,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserFromSession } from "../../../../lib/session";
 import { prisma } from "../../../../lib/prisma";
-import fs from "fs";
-import path from "path";
-import { pipeline } from "stream/promises";
-import { Readable } from "stream";
 
 /**
  * GET /api/conversations/[id]
@@ -102,6 +98,8 @@ export async function GET(
 /**
  * POST /api/conversations/[id]
  * Send a message in a discussion.
+ * Expects JSON with { content?, mediaUrl?, mediaType? }.
+ * Files should be uploaded to Vercel Blob separately via /api/uploads.
  * Verifies the current user is a participant.
  */
 export async function POST(
@@ -120,44 +118,9 @@ export async function POST(
       return NextResponse.json({ error: "Invalid discussion ID" }, { status: 400 });
     }
 
-    // Support both JSON and multipart/form-data uploads
-    let content: string | null = null;
-    let mediaType: string | null = null;
-    let mediaUrl: string | null = null;
-
-    const contentType = request.headers.get("content-type") || "";
-    if (contentType.includes("multipart/form-data")) {
-      const form = await request.formData();
-      const file = form.get("file") as File | null;
-      const text = form.get("content");
-      content = text ? String(text) : null;
-
-      if (file && (file as any).stream) {
-        // Ensure uploads directory exists
-        const uploadsDir = path.join(process.cwd(), "public", "uploads");
-        await fs.promises.mkdir(uploadsDir, { recursive: true });
-
-        const originalName = (file as any).name || "upload";
-        const ext = path.extname(originalName) || "";
-        const id = Date.now() + "-" + Math.random().toString(36).slice(2, 9);
-        const fileName = `${id}${ext}`;
-        const filePath = path.join(uploadsDir, fileName);
-
-        // Convert web ReadableStream to Node Readable and pipe to fs
-        const webStream = (file as any).stream();
-        const nodeStream = Readable.fromWeb(webStream as any);
-        const writeStream = fs.createWriteStream(filePath);
-        await pipeline(nodeStream, writeStream);
-
-        mediaType = (file as any).type || null;
-        mediaUrl = `/uploads/${fileName}`;
-      }
-    } else {
-      const body = await request.json();
-      content = body.content || null;
-      mediaType = body.mediaType || null;
-      mediaUrl = body.mediaUrl || null;
-    }
+    // Parse JSON body (files are already uploaded to Vercel Blob)
+    const body = await request.json();
+    const { content, mediaUrl, mediaType } = body;
 
     if (!content && !mediaUrl) {
       return NextResponse.json(
@@ -182,7 +145,7 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Create the message
+    // Create the message with the provided mediaUrl (from Vercel Blob)
     const message = await prisma.message.create({
       data: {
         content: content || null,

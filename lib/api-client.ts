@@ -139,7 +139,8 @@ export async function getMessages(
 }
 
 /**
- * Send a message in a conversation
+ * Send a message in a conversation.
+ * If a file is provided, upload it to Vercel Blob first, then create the message with mediaUrl.
  */
 export async function sendMessage(
   discussionId: number,
@@ -150,26 +151,43 @@ export async function sendMessage(
     file?: File | Blob | null;
   }
 ): Promise<Message> {
-  let response: Response;
-  if (message.file) {
-    const fd = new FormData();
-    if (message.content) fd.append("content", message.content);
-    // append the file under the key 'file'
-    fd.append("file", message.file as any, (message.file as any).name || "upload");
+  let finalMediaUrl: string | null = null;
+  let finalMediaType: string | null = null;
 
-    response = await fetch(`/api/conversations/${discussionId}`, {
-      method: "POST",
-      credentials: "include",
-      body: fd,
-    });
-  } else {
-    response = await fetch(`/api/conversations/${discussionId}`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(message),
-    });
+  // If a file is provided, upload it to Vercel Blob using client-side upload
+  if (message.file && typeof window !== "undefined") {
+    try {
+      const { upload } = await import("@vercel/blob/client");
+      const file = message.file as File;
+      
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/uploads",
+      });
+
+      finalMediaUrl = blob.url;
+      finalMediaType = file.type || "application/octet-stream";
+      console.log("File uploaded to Vercel Blob:", finalMediaUrl);
+    } catch (err) {
+      console.error("Error uploading file to Vercel Blob:", err);
+      throw new Error("Failed to upload file");
+    }
+  } else if (message.mediaUrl) {
+    finalMediaUrl = message.mediaUrl;
+    finalMediaType = message.mediaType || null;
   }
+
+  // Create the message with the uploaded media URL (if any)
+  const response = await fetch(`/api/conversations/${discussionId}`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      content: message.content || null,
+      mediaUrl: finalMediaUrl || null,
+      mediaType: finalMediaType || null,
+    }),
+  });
 
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
