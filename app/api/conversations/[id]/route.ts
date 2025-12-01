@@ -108,6 +108,20 @@ export async function POST(
 ) {
   const { id } = await params;
   try {
+    // Block accidental multipart/form-data posts to this JSON endpoint.
+    // Serverless filesystem is read-only on Vercel; multipart handlers that
+    // attempt to write into `public/uploads` will fail with EROFS. Force
+    // clients to upload files via the Vercel Blob flow (/api/uploads).
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.startsWith("multipart/")) {
+      console.error(
+        "Rejected multipart request to /api/conversations/[id] - instruct client to use /api/uploads"
+      );
+      return NextResponse.json(
+        { error: "Multipart uploads are not supported. Upload files via /api/uploads (Vercel Blob)." },
+        { status: 400 }
+      );
+    }
     const currentUser = await getUserFromSession();
     if (!currentUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -174,7 +188,12 @@ export async function POST(
 
     return NextResponse.json(message, { status: 201 });
   } catch (error) {
-    console.error("Error creating message:", error);
+    // Log the error and stack (if available) to help diagnose EROFS or other issues
+    if (error instanceof Error) {
+      console.error("Error creating message:", error.message, error.stack);
+    } else {
+      console.error("Error creating message:", error);
+    }
     return NextResponse.json(
       { error: "Failed to send message" },
       { status: 500 }
