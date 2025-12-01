@@ -9,7 +9,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         {/* Inline script to remove attributes some browser extensions inject
             (e.g. cz-shortcut-listen) before React hydrates to avoid

@@ -107,7 +107,7 @@ export default function LoginForm() {
         </CardHeader>
 
         <CardContent>
-          <form action={action} method="post" className="space-y-6">
+          <form action={action} className="space-y-6">
             {/* progress bar */}
             <div className="flex items-center gap-1 justify-center">
               {steps.map((s, i) => (
