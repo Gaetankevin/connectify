@@ -157,9 +157,11 @@ export async function sendMessage(
   // If a file is provided, upload it to Vercel Blob using client-side upload
   if (message.file && typeof window !== "undefined") {
     try {
+      console.log("[sendMessage] Uploading file:", (message.file as any).name);
       const { upload } = await import("@vercel/blob/client");
       const file = message.file as File;
       
+      console.log("[sendMessage] Calling upload() to /api/uploads...");
       const blob = await upload(file.name, file, {
         access: "public",
         handleUploadUrl: "/api/uploads",
@@ -167,10 +169,10 @@ export async function sendMessage(
 
       finalMediaUrl = blob.url;
       finalMediaType = file.type || "application/octet-stream";
-      console.log("File uploaded to Vercel Blob:", finalMediaUrl);
+      console.log("[sendMessage] File uploaded to Vercel Blob:", finalMediaUrl);
     } catch (err) {
-      console.error("Error uploading file to Vercel Blob:", err);
-      throw new Error("Failed to upload file");
+      console.error("[sendMessage] Error uploading file to Vercel Blob:", err);
+      throw new Error(`Failed to upload file: ${err instanceof Error ? err.message : String(err)}`);
     }
   } else if (message.mediaUrl) {
     finalMediaUrl = message.mediaUrl;
@@ -178,6 +180,7 @@ export async function sendMessage(
   }
 
   // Create the message with the uploaded media URL (if any)
+  console.log("[sendMessage] Creating message with mediaUrl:", finalMediaUrl);
   const response = await fetch(`/api/conversations/${discussionId}`, {
     method: "POST",
     credentials: "include",
@@ -190,6 +193,9 @@ export async function sendMessage(
   });
 
   if (!response.ok) {
+    console.error("[sendMessage] POST /api/conversations failed with status:", response.status);
+    const errorText = await response.text();
+    console.error("[sendMessage] Response body:", errorText);
     if (response.status === 401 || response.status === 403) {
       if (typeof window !== "undefined") window.location.href = "/login";
       throw new Error("Unauthorized");
@@ -197,5 +203,7 @@ export async function sendMessage(
     throw new Error("Failed to send message");
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log("[sendMessage] Message created successfully");
+  return result;
 }
