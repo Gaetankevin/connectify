@@ -203,6 +203,17 @@ export async function POST(
       data: { updatedAt: new Date() },
     });
 
+    // Trigger an async backup of the database to Vercel Blob to keep a data-only dump
+    try {
+      const { backupDatabase } = await import("@/lib/db-backup");
+      // fire-and-forget: do not block response on backup/upload
+      backupDatabase({ filenamePrefix: `messages-discussion-${discussionId}`, asyncUpload: true }).catch((e) => {
+        console.error("Background backup failed:", e);
+      });
+    } catch (e) {
+      console.error("Could not start background backup:", e);
+    }
+
     return NextResponse.json(message, { status: 201 });
   } catch (error) {
     // Log the error and stack (if available) to help diagnose EROFS or other issues
