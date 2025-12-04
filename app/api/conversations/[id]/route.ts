@@ -207,7 +207,7 @@ export async function POST(
     try {
       const { backupDatabase } = await import("@/lib/db-backup");
       // fire-and-forget: do not block response on backup/upload
-      backupDatabase({ filenamePrefix: `messages-discussion-${discussionId}`, asyncUpload: true }).catch((e) => {
+      backupDatabase({ filenamePrefix: `messages-discussion-${discussionId}`, asyncUpload: true, directory: 'database' }).catch((e) => {
         console.error("Background backup failed:", e);
       });
     } catch (e) {

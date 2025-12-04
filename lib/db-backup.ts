@@ -4,6 +4,7 @@ type BackupOptions = {
   includeTables?: string[]; // limit to specific tables
   filenamePrefix?: string;
   asyncUpload?: boolean; // if true, upload in background (non-blocking)
+  directory?: string; // directory in blob storage, e.g. 'database'
 };
 
 function escapeSql(value: any): string {
@@ -79,6 +80,8 @@ export async function backupDatabase(options: BackupOptions = {}) {
   const ts = new Date();
   const timestamp = ts.toISOString().replace(/[:.]/g, "-");
   const filename = `${filenamePrefix ?? "backup"}_${timestamp}.sql`;
+  const directory = options.directory ?? process.env.BLOB_UPLOAD_DIRECTORY ?? "database";
+  const fullFilename = directory ? `${directory.replace(/^\/+|\/+$/g, "")}/${filename}` : filename;
 
   try {
     const tables = includeTables && includeTables.length > 0 ? includeTables : await listTables();
@@ -108,7 +111,7 @@ export async function backupDatabase(options: BackupOptions = {}) {
     sql += `COMMIT;\n`;
 
     const doUpload = async () => {
-      const url = await uploadToVercelBlob(sql, filename);
+      const url = await uploadToVercelBlob(sql, fullFilename);
       if (url) {
         console.log("Database backup uploaded to Vercel Blob:", url);
       }
@@ -117,10 +120,10 @@ export async function backupDatabase(options: BackupOptions = {}) {
     if (asyncUpload) {
       // Fire-and-forget but log errors
       doUpload().catch((e) => console.error("Async backup upload failed:", e));
-      return { ok: true, filename };
+      return { ok: true, filename: fullFilename };
     } else {
-      const url = await uploadToVercelBlob(sql, filename);
-      return { ok: !!url, url, filename };
+      const url = await uploadToVercelBlob(sql, fullFilename);
+      return { ok: !!url, url, filename: fullFilename };
     }
   } catch (err) {
     console.error("backupDatabase error:", err);
