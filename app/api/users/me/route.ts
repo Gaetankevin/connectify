@@ -22,6 +22,9 @@ export async function GET(request: NextRequest) {
         name: true,
         surname: true,
         createdAt: true,
+        isDeactivated: true,
+        deactivatedAt: true,
+        deletedAt: true,
       },
     });
 
@@ -66,6 +69,9 @@ export async function PATCH(request: NextRequest) {
         email: true,
         name: true,
         surname: true,
+        isDeactivated: true,
+        deactivatedAt: true,
+        deletedAt: true,
       },
     });
 

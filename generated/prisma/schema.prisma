@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -15,21 +15,21 @@ model Role {
 }
 
 model User {
-  id                 Int          @id @default(autoincrement())
-  name               String
-  surname            String
-  username           String       @unique
-  email              String       @unique
-  passwordHash       String
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
-  roleId             Int
-  
+  id           Int      @id @default(autoincrement())
+  name         String
+  surname      String
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  roleId       Int
+
   // Account status flags
-  isDeactivated      Boolean      @default(false)          // Temporarily hidden (can be reactivated within 30 days)
-  deactivatedAt      DateTime?                             // Timestamp when account was deactivated
-  deletedAt          DateTime?                             // Soft delete timestamp (after 30 days, can be permanently deleted)
-  
+  isDeactivated Boolean   @default(false) // Temporarily hidden (can be reactivated within 30 days)
+  deactivatedAt DateTime? // Timestamp when account was deactivated
+  deletedAt     DateTime? // Soft delete timestamp (after 30 days, can be permanently deleted)
+
   discussionsAsUser1 Discussion[] @relation("User1Discussions")
   discussionsAsUser2 Discussion[] @relation("User2Discussions")
   messages           Message[]

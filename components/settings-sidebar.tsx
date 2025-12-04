@@ -45,6 +45,8 @@ interface SettingsSidebarProps {
     email: string;
     name: string;
     surname: string;
+    isDeactivated?: boolean;
+    deletedAt?: string | null;
   };
   onLogout?: () => void;
 }
@@ -77,6 +79,10 @@ export function SettingsSidebar({
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [confirmationText, setConfirmationText] = useState("");
+  const [accountStatus, setAccountStatus] = useState({
+    isDeactivated: user?.isDeactivated || false,
+    deletedAt: user?.deletedAt || null,
+  });
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -87,6 +93,10 @@ export function SettingsSidebar({
         name: user.name || "",
         surname: user.surname || "",
         email: user.email || "",
+      });
+      setAccountStatus({
+        isDeactivated: user.isDeactivated || false,
+        deletedAt: user.deletedAt || null,
       });
     }
   }, [user]);
@@ -203,22 +213,46 @@ export function SettingsSidebar({
 
   const handleDeactivate = async () => {
     try {
-      const response = await fetch("/api/auth/deactivate", {
+      const response = await fetch("/api/auth/deactivate?action=deactivate", {
         method: "POST",
       });
 
       if (!response.ok) {
-        throw new Error("Failed to deactivate account");
+        const error = await response.json();
+        throw new Error(error.error || "Failed to deactivate account");
       }
 
-      toast.success("Compte désactivé");
+      const data = await response.json();
+      setAccountStatus({ ...accountStatus, isDeactivated: true });
+      toast.success("Compte désactivé. Vous pouvez vous reconnecter dans 30 jours pour le réactiver.");
       setDeactivateDialogOpen(false);
       // Redirect to login after deactivation
       setTimeout(() => {
         window.location.href = "/login";
-      }, 1000);
+      }, 2000);
     } catch (error) {
-      toast.error("Impossible de désactiver le compte");
+      const message = error instanceof Error ? error.message : "Impossible de désactiver le compte";
+      toast.error(message);
+      console.error(error);
+    }
+  };
+
+  const handleReactivate = async () => {
+    try {
+      const response = await fetch("/api/auth/deactivate?action=reactivate", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to reactivate account");
+      }
+
+      setAccountStatus({ ...accountStatus, isDeactivated: false });
+      toast.success("Compte réactivé avec succès!");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Impossible de réactiver le compte";
+      toast.error(message);
       console.error(error);
     }
   };
@@ -235,18 +269,26 @@ export function SettingsSidebar({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete account");
+        const error = await response.json();
+        throw new Error(error.error || "Failed to delete account");
       }
 
-      toast.success("Compte supprimé");
+      const data = await response.json();
+      setAccountStatus({
+        ...accountStatus,
+        isDeactivated: true,
+        deletedAt: data.deletionDate,
+      });
+      toast.success("Votre compte sera supprimé définitivement dans 30 jours");
       setDeleteDialogOpen(false);
       setConfirmationText("");
-      // Redirect to login after deletion
+      // Redirect to login
       setTimeout(() => {
         window.location.href = "/login";
-      }, 1000);
+      }, 2000);
     } catch (error) {
-      toast.error("Impossible de supprimer le compte");
+      const message = error instanceof Error ? error.message : "Impossible de supprimer le compte";
+      toast.error(message);
       console.error(error);
     }
   };
@@ -606,35 +648,80 @@ export function SettingsSidebar({
                   <Alert className="border-red-600/50 bg-red-900/20 mb-4">
                     <AlertTriangle className="h-4 w-4 text-red-500" />
                     <AlertDescription className="text-red-400 text-sm">
-                      Actions permanentes et irréversibles. Procédez avec prudence.
+                      Actions importantes pour la gestion de votre compte. Procédez avec prudence.
                     </AlertDescription>
                   </Alert>
 
-                  {/* Deactivate Account */}
+                  {/* Account Status Info */}
+                  {accountStatus.isDeactivated && (
+                    <Card className="border-orange-600/30 bg-orange-900/20 p-4 mb-4">
+                      <div className="space-y-2">
+                        <h4 className="font-semibold text-orange-100">
+                          ⏸️ Compte actuellement désactivé
+                        </h4>
+                        <p className="text-sm text-orange-200">
+                          Votre compte est actuellement caché. Vous pouvez le réactiver en cliquant sur le bouton ci-dessous.
+                        </p>
+                        {accountStatus.deletedAt && (
+                          <p className="text-sm text-red-300 mt-2">
+                            ⚠️ <strong>Important:</strong> Votre compte sera supprimé définitivement le{" "}
+                            <strong>
+                              {new Date(accountStatus.deletedAt).toLocaleDateString("fr-FR")}
+                            </strong>
+                          </p>
+                        )}
+                      </div>
+                    </Card>
+                  )}
+
+                  {/* Deactivate/Reactivate Account */}
                   <Card className="border-orange-600/30 bg-orange-900/20 p-4">
                     <div className="space-y-3">
                       <div className="flex items-start gap-3">
                         <Ban className="h-5 w-5 text-orange-400 mt-0.5 flex-shrink-0" />
                         <div className="flex-1">
                           <h3 className="font-semibold text-orange-100 mb-1">
-                            Désactiver le compte
+                            {accountStatus.isDeactivated ? "Réactiver le compte" : "Désactiver le compte"}
                           </h3>
-                          <p className="text-sm text-orange-200 mb-3">
-                            Désactivez temporairement votre compte. Vous pouvez le réactiver en vous reconnectant.
-                          </p>
-                          <ul className="text-sm text-orange-200 space-y-1 list-disc list-inside">
-                            <li>Votre profil sera caché</li>
-                            <li>Vos données seront préservées</li>
-                            <li>Réactivez dans les 30 jours</li>
-                          </ul>
+                          {!accountStatus.isDeactivated ? (
+                            <>
+                              <p className="text-sm text-orange-200 mb-3">
+                                Désactivez temporairement votre compte. Vous pouvez le réactiver en vous reconnectant dans 30 jours.
+                              </p>
+                              <ul className="text-sm text-orange-200 space-y-1 list-disc list-inside">
+                                <li>Votre profil sera caché</li>
+                                <li>Vos données seront préservées</li>
+                                <li>Réactivez dans les 30 jours</li>
+                              </ul>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-sm text-orange-200 mb-3">
+                                Votre compte est actuellement désactivé. Réactivez-le pour réaccéder à votre profil et vos conversations.
+                              </p>
+                              <ul className="text-sm text-orange-200 space-y-1 list-disc list-inside">
+                                <li>Votre profil sera à nouveau visible</li>
+                                <li>Vous recevrez à nouveau les notifications</li>
+                                <li>Tous vos messages seront restaurés</li>
+                              </ul>
+                            </>
+                          )}
                         </div>
                       </div>
                       <Button
                         variant="outline"
-                        onClick={() => setDeactivateDialogOpen(true)}
-                        className="w-full border-orange-600/50 text-orange-400 hover:bg-orange-900/30"
+                        onClick={() =>
+                          accountStatus.isDeactivated
+                            ? handleReactivate()
+                            : setDeactivateDialogOpen(true)
+                        }
+                        className={
+                          accountStatus.isDeactivated
+                            ? "w-full border-green-600/50 text-green-400 hover:bg-green-900/30"
+                            : "w-full border-orange-600/50 text-orange-400 hover:bg-orange-900/30"
+                        }
                       >
-                        Désactiver le compte
+                        {accountStatus.isDeactivated ? "Réactiver le compte" : "Désactiver le compte"}
                       </Button>
                     </div>
                   </Card>
@@ -649,21 +736,24 @@ export function SettingsSidebar({
                             Supprimer le compte définitivement
                           </h3>
                           <p className="text-sm text-red-200 mb-3">
-                            Une fois supprimé, il n'y a pas de retour. Cette action est permanente.
+                            Marquez votre compte pour suppression. Après 30 jours, votre compte sera définitivement supprimé.
                           </p>
                           <ul className="text-sm text-red-200 space-y-1 list-disc list-inside">
-                            <li>Toutes vos données seront supprimées</li>
-                            <li>Votre nom d'utilisateur sera disponible</li>
-                            <li>Cette action est irréversible</li>
+                            <li>Votre compte sera caché immédiatement</li>
+                            <li>Vous avez 30 jours pour annuler</li>
+                            <li>Après 30 jours, suppression définitive</li>
                           </ul>
                         </div>
                       </div>
                       <Button
                         variant="destructive"
                         onClick={() => setDeleteDialogOpen(true)}
+                        disabled={!!accountStatus.deletedAt}
                         className="w-full"
                       >
-                        Supprimer le compte
+                        {accountStatus.deletedAt
+                          ? "Suppression programmée"
+                          : "Supprimer le compte"}
                       </Button>
                     </div>
                   </Card>
@@ -688,8 +778,12 @@ export function SettingsSidebar({
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   <li>Votre profil sera caché des autres utilisateurs</li>
                   <li>Vous ne recevrez pas de notifications</li>
-                  <li>Vos données seront préservées</li>
+                  <li>Vous ne serez pas visible dans les conversations</li>
+                  <li>Toutes vos données seront préservées et restaurées si vous vous reconnectez</li>
                 </ul>
+                <p className="font-medium text-orange-300 mt-3">
+                  💡 Vous pouvez vous reconnecter à tout moment dans les 30 jours pour réactiver votre compte.
+                </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -712,12 +806,23 @@ export function SettingsSidebar({
         <AlertDialogContent className="bg-slate-800 border-slate-700">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-400">
-              Supprimer le compte définitivement?
+              Marquer le compte pour suppression?
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3 text-slate-300">
                 <p className="font-medium text-slate-100">
-                  Cette action est irréversible. Toutes vos données seront supprimées de nos serveurs.
+                  Cette action marquera votre compte pour suppression définitive.
+                </p>
+                <div className="space-y-2 bg-red-900/20 border border-red-600/30 rounded p-3">
+                  <p className="text-sm text-red-300">
+                    <strong>⏱️ Délai de 30 jours:</strong> Votre compte sera complètement supprimé dans 30 jours.
+                  </p>
+                  <p className="text-sm text-yellow-300">
+                    <strong>🔄 Possibilité d'annuler:</strong> Vous pouvez vous reconnecter et annuler la suppression à tout moment avant l'expiration du délai.
+                  </p>
+                </div>
+                <p className="text-sm text-slate-400">
+                  Pendant ces 30 jours, votre profil sera caché mais vos données seront préservées.
                 </p>
                 <div className="space-y-2">
                   <p className="text-sm">
@@ -746,7 +851,7 @@ export function SettingsSidebar({
               disabled={confirmationText !== user?.email}
               className="bg-red-600 hover:bg-red-700"
             >
-              Supprimer mon compte
+              Marquer pour suppression
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
