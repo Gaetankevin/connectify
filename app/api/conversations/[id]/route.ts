@@ -60,9 +60,19 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Fetch all messages in the discussion
+    // Support delta fetch: ?after=<lastMessageId>
+    const url = new URL(request.url);
+    const afterParam = url.searchParams.get("after");
+    const afterId = afterParam ? Number(afterParam) : 0;
+
+    // Build base query for messages
+    const whereClause: any = { discussionId };
+    if (afterId && !isNaN(afterId) && afterId > 0) {
+      whereClause.id = { gt: afterId };
+    }
+
     const messages = await prisma.message.findMany({
-      where: { discussionId },
+      where: whereClause,
       include: {
         sender: {
           select: {
@@ -74,8 +84,15 @@ export async function GET(
         },
       },
       orderBy: { createdAt: "asc" },
+      take: 200,
     });
 
+    // If client requested a delta (afterId > 0) we only return messages to keep payload small.
+    if (afterId && afterId > 0) {
+      return NextResponse.json({ messages });
+    }
+
+    // Default: return full discussion + messages
     return NextResponse.json({
       discussion: {
         id: discussion.id,

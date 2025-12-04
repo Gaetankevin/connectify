@@ -50,6 +50,10 @@ export default function ChatLayout() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<Message[]>([]);
+  const [lastMessageId, setLastMessageId] = useState<number | null>(null);
+  const lastMessageIdRef = useRef<number | null>(null);
+  const idlePollsRef = useRef<number>(0);
+  const pollTimerRef = useRef<number | null>(null);
   const [lastNotifiedMessageId, setLastNotifiedMessageId] = useState<
     number | null
   >(null);
@@ -130,44 +134,102 @@ export default function ChatLayout() {
   useEffect(() => {
     const iv = setInterval(() => {
       fetchConversations(true);
-    }, 1000);
+    }, 10000);
     return () => clearInterval(iv);
   }, []);
 
   useEffect(() => {
     if (!selectedConvId) return;
+
     let mounted = true;
-    const checker = async () => {
+
+    // initial full fetch (discussion + messages)
+    const doInitialFetch = async () => {
       try {
-        const { discussion: d, messages: newMessages } = await getMessages(
+        const { discussion: d, messages: msgs } = await getMessages(
           selectedConvId
         );
         if (!mounted) return;
+        setDiscussion(d ?? null);
+        setMessages(msgs);
+        messagesRef.current = msgs;
+        const last = msgs.length ? msgs[msgs.length - 1].id : null;
+        setLastMessageId(last);
+        lastMessageIdRef.current = last;
+        idlePollsRef.current = 0;
+      } catch (err) {
+        console.error("Initial fetch failed:", err);
+      }
+    };
 
-        const last = newMessages.length
-          ? newMessages[newMessages.length - 1]
-          : null;
-        const prevLast = messagesRef.current.length
-          ? messagesRef.current[messagesRef.current.length - 1]
-          : null;
+    // checker retrieves only new messages after lastMessageId (delta)
+    const checker = async () => {
+      try {
+        const after = lastMessageIdRef.current ?? 0;
+        const res = await getMessages(
+          selectedConvId,
+          after && after > 0 ? after : undefined
+        );
 
-        setDiscussion(d);
-        setMessages(newMessages);
+        // res may contain discussion (on full fetch) or only messages (delta)
+        if (!mounted) return;
 
-        if (last && (!prevLast || last.id !== prevLast.id)) {
+        if (res.discussion) {
+          setDiscussion(res.discussion);
+        }
+
+        const newMessages = res.messages || [];
+        if (newMessages.length > 0) {
+          // append deltas to current messages
+          const merged = [...messagesRef.current, ...newMessages];
+          setMessages(merged);
+          messagesRef.current = merged;
+
+          const last = newMessages[newMessages.length - 1];
+          setLastMessageId(last.id);
+          lastMessageIdRef.current = last.id;
+          idlePollsRef.current = 0;
+
+          // notify if message from other user
           const conv = conversations.find((c) => c.id === selectedConvId);
           if (conv && last.senderId === conv.otherUser.id) {
             notifyNewMessage(last, conv.otherUser.name);
           }
+        } else {
+          // no new messages
+          idlePollsRef.current = (idlePollsRef.current || 0) + 1;
         }
-      } catch (e) {}
+      } catch (err) {
+        console.error("Delta fetch failed:", err);
+      }
     };
 
-    checker();
-    const iv = setInterval(checker, 1000);
+    // adaptive scheduler using setTimeout so we can vary intervals
+    const scheduleNext = () => {
+      // Determine delay based on visibility and recent activity
+      const visible = typeof document !== "undefined" ? document.visibilityState === "visible" : true;
+      let delay = visible ? 2000 : 15000;
+      if (visible && idlePollsRef.current > 10) delay = 10000; // backoff after many idle polls
+
+      pollTimerRef.current = window.setTimeout(async () => {
+        if (!mounted) return;
+        await checker();
+        scheduleNext();
+      }, delay) as unknown as number;
+    };
+
+    // start
+    doInitialFetch().then(() => {
+      if (!mounted) return;
+      scheduleNext();
+    });
+
     return () => {
       mounted = false;
-      clearInterval(iv);
+      if (pollTimerRef.current) {
+        clearTimeout(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
     };
   }, [selectedConvId, conversations]);
 
@@ -208,8 +270,12 @@ export default function ChatLayout() {
   const fetchMessages = async (convId: number) => {
     try {
       const { discussion, messages } = await getMessages(convId);
-      setDiscussion(discussion);
+      setDiscussion(discussion ?? null);
       setMessages(messages);
+      messagesRef.current = messages;
+      const last = messages.length ? messages[messages.length - 1].id : null;
+      setLastMessageId(last);
+      lastMessageIdRef.current = last;
     } catch (err) {
       toast.error("Impossible de charger les messages");
       console.error(err);
@@ -270,8 +336,14 @@ export default function ChatLayout() {
         content: messageInput.trim() || undefined,
         file: selectedFile || undefined,
       });
-
-      setMessages([...messages, newMsg]);
+      // append sent message and update lastMessageId
+      setMessages((prev) => {
+        const merged = [...prev, newMsg];
+        messagesRef.current = merged;
+        return merged;
+      });
+      setLastMessageId(newMsg.id);
+      lastMessageIdRef.current = newMsg.id;
       setMessageInput("");
       setSelectedFile(null);
 

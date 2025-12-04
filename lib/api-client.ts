@@ -120,9 +120,11 @@ export async function createConversation(otherUserId: number): Promise<Discussio
  * Fetch all messages in a conversation
  */
 export async function getMessages(
-  discussionId: number
-): Promise<{ discussion: Discussion; messages: Message[] }> {
-  const response = await fetch(`/api/conversations/${discussionId}`, {
+  discussionId: number,
+  after?: number
+): Promise<{ discussion?: Discussion; messages: Message[] }> {
+  const url = `/api/conversations/${discussionId}${typeof after === 'number' && after > 0 ? `?after=${after}` : ''}`;
+  const response = await fetch(url, {
     credentials: "include",
   });
 
