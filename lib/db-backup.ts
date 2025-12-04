@@ -41,35 +41,24 @@ async function fetchAllRows(table: string): Promise<any[]> {
 async function uploadToVercelBlob(sql: string, filename: string) {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token) {
-    console.warn("BLOB_READ_WRITE_TOKEN not set — skipping upload");
+    console.warn("[db-backup] BLOB_READ_WRITE_TOKEN not set — skipping upload");
     return null;
   }
 
   try {
-    // Use FormData to upload the file
-    const form = new FormData();
-    const blob = new Blob([sql], { type: "text/sql" });
-    form.append("file", blob, filename);
-
-    const res = await fetch("https://api.vercel.com/v1/blob", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: form as any,
+    // Use @vercel/blob server-side API to upload
+    const { put } = await import("@vercel/blob");
+    console.log("[db-backup] Uploading to Vercel Blob:", filename);
+    
+    const result = await put(filename, sql, {
+      access: "public",
+      token: token,
     });
-
-    if (!res.ok) {
-      const text = await res.text();
-      console.error("Vercel Blob upload failed:", res.status, text);
-      return null;
-    }
-
-    const json = await res.json();
-    // The response should contain a `url` field for the created blob
-    return json?.url ?? null;
+    
+    console.log("[db-backup] File uploaded successfully to:", result.url);
+    return result.url;
   } catch (err) {
-    console.error("Error uploading to Vercel Blob:", err);
+    console.error("[db-backup] Error uploading to Vercel Blob:", err instanceof Error ? err.message : err);
     return null;
   }
 }
@@ -84,7 +73,10 @@ export async function backupDatabase(options: BackupOptions = {}) {
   const fullFilename = directory ? `${directory.replace(/^\/+|\/+$/g, "")}/${filename}` : filename;
 
   try {
+    console.log(`[db-backup] Starting backup, tables to dump:`, includeTables || "all public tables");
+    
     const tables = includeTables && includeTables.length > 0 ? includeTables : await listTables();
+    console.log(`[db-backup] Tables found:`, tables);
 
     let sql = `-- Connectify database backup (data-only)\n-- Generated: ${ts.toISOString()}\n\n`;
     sql += `BEGIN;\nSET CONSTRAINTS ALL DEFERRED;\n\n`;
@@ -92,7 +84,12 @@ export async function backupDatabase(options: BackupOptions = {}) {
     for (const table of tables) {
       try {
         const rows = await fetchAllRows(table);
-        if (!rows || rows.length === 0) continue;
+        if (!rows || rows.length === 0) {
+          console.log(`[db-backup] Table "${table}" is empty, skipping`);
+          continue;
+        }
+
+        console.log(`[db-backup] Dumping table "${table}" with ${rows.length} rows`);
 
         // derive columns from first row
         const cols = Object.keys(rows[0]);
@@ -104,29 +101,32 @@ export async function backupDatabase(options: BackupOptions = {}) {
         }
         sql += `\n`;
       } catch (err) {
-        console.error(`Failed to dump table ${table}:`, err);
+        console.error(`[db-backup] Failed to dump table ${table}:`, err);
       }
     }
 
     sql += `COMMIT;\n`;
+    console.log(`[db-backup] Generated SQL dump (${sql.length} bytes), filename: ${fullFilename}`);
 
     const doUpload = async () => {
       const url = await uploadToVercelBlob(sql, fullFilename);
       if (url) {
-        console.log("Database backup uploaded to Vercel Blob:", url);
+        console.log("[db-backup] Database backup uploaded successfully to Vercel Blob:", url);
+      } else {
+        console.warn("[db-backup] Backup generated but upload failed or was skipped");
       }
     };
 
     if (asyncUpload) {
       // Fire-and-forget but log errors
-      doUpload().catch((e) => console.error("Async backup upload failed:", e));
+      doUpload().catch((e) => console.error("[db-backup] Async backup upload failed:", e));
       return { ok: true, filename: fullFilename };
     } else {
       const url = await uploadToVercelBlob(sql, fullFilename);
       return { ok: !!url, url, filename: fullFilename };
     }
   } catch (err) {
-    console.error("backupDatabase error:", err);
+    console.error("[db-backup] backupDatabase error:", err);
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
