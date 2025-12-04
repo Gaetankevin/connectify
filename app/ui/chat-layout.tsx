@@ -23,6 +23,7 @@ import {
   Paperclip,
   X,
   MessageCircle,
+  Settings,
 } from "lucide-react";
 import {
   getConversations,
@@ -32,6 +33,7 @@ import {
   sendMessage,
 } from "@/lib/api-client";
 import type { Conversation, User, Message, Discussion } from "@/lib/api-client";
+import { SettingsSidebar } from "@/components/settings-sidebar";
 
 export default function ChatLayout() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -57,6 +59,14 @@ export default function ChatLayout() {
   const [lastNotifiedMessageId, setLastNotifiedMessageId] = useState<
     number | null
   >(null);
+  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{
+    id: number;
+    username: string;
+    email: string;
+    name: string;
+    surname: string;
+  } | null>(null);
 
   useEffect(() => {
     const onResize = () => {
@@ -68,6 +78,8 @@ export default function ChatLayout() {
 
   useEffect(() => {
     fetchConversations();
+    // Fetch current user data
+    fetchCurrentUser();
   }, []);
 
   useEffect(() => {
@@ -267,6 +279,17 @@ export default function ChatLayout() {
     }
   };
 
+  const fetchCurrentUser = async () => {
+    try {
+      const response = await fetch("/api/users/me");
+      if (!response.ok) throw new Error("Failed to fetch user");
+      const user = await response.json();
+      setCurrentUser(user);
+    } catch (err) {
+      console.error("Failed to fetch current user:", err);
+    }
+  };
+
   const fetchMessages = async (convId: number) => {
     try {
       const { discussion, messages } = await getMessages(convId);
@@ -407,6 +430,14 @@ export default function ChatLayout() {
                 title="Nouvelle conversation"
               >
                 <Plus className="w-4 h-4" />
+              </Button>
+              <Button
+                onClick={() => setSettingsPanelOpen(true)}
+                size="icon"
+                className="bg-slate-700 hover:bg-slate-600 h-9 w-9 text-slate-300"
+                title="Paramètres"
+              >
+                <Settings className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -853,6 +884,17 @@ export default function ChatLayout() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Settings Sidebar */}
+      <SettingsSidebar
+        isOpen={settingsPanelOpen}
+        onClose={() => setSettingsPanelOpen(false)}
+        user={currentUser || undefined}
+        onLogout={() => {
+          // Redirect to logout
+          window.location.href = "/api/auth/logout";
+        }}
+      />
     </div>
   );
 }
