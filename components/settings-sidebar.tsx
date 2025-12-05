@@ -33,6 +33,8 @@ import {
   AlertTriangle,
   Ban,
   Trash2,
+  Upload,
+  Image,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -47,6 +49,7 @@ interface SettingsSidebarProps {
     surname: string;
     isDeactivated?: boolean;
     deletedAt?: string | null;
+    profileImage?: string | null;
   };
   onLogout?: () => void;
 }
@@ -84,6 +87,11 @@ export function SettingsSidebar({
     deletedAt: user?.deletedAt || null,
   });
 
+  // Profile photo states
+  const [profileImage, setProfileImage] = useState<string | null>(user?.profileImage || null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(user?.profileImage || null);
+
   const [isSaving, setIsSaving] = useState(false);
 
   // Update form data when user changes
@@ -98,12 +106,87 @@ export function SettingsSidebar({
         isDeactivated: user.isDeactivated || false,
         deletedAt: user.deletedAt || null,
       });
+      setProfileImage(user.profileImage || null);
+      setPhotoPreview(user.profileImage || null);
     }
   }, [user]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sélectionner un fichier image");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("La taille du fichier ne doit pas dépasser 5MB");
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePhotoUpload = async (file: File) => {
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/users/me/profile-picture", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to upload photo");
+      }
+
+      const data = await response.json();
+      setProfileImage(data.profileImage);
+      setPhotoPreview(data.profileImage);
+      toast.success("Photo de profil mise à jour!");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erreur lors du téléchargement";
+      toast.error(message);
+      console.error(error);
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handlePhotoDelete = async () => {
+    try {
+      const response = await fetch("/api/users/me/profile-picture", {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete photo");
+      }
+
+      setProfileImage(null);
+      setPhotoPreview(null);
+      toast.success("Photo de profil supprimée");
+    } catch (error) {
+      toast.error("Erreur lors de la suppression de la photo");
+      console.error(error);
+    }
   };
 
   const getPasswordStrength = (password: string): number => {
@@ -368,11 +451,68 @@ export function SettingsSidebar({
                   {!isEditing && (
                     <Card className="bg-slate-800 border-slate-700 p-4">
                       <div className="space-y-3">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 mx-auto">
-                          <span className="text-white font-bold text-lg">
-                            {user?.name?.charAt(0) || "U"}
-                          </span>
+                        {/* Profile Picture */}
+                        <div className="flex items-center justify-center">
+                          {photoPreview ? (
+                            <div className="relative">
+                              <img
+                                src={photoPreview}
+                                alt="Profile"
+                                className="w-20 h-20 rounded-full object-cover border-2 border-indigo-500"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500">
+                              <span className="text-white font-bold text-2xl">
+                                {user?.name?.charAt(0) || "U"}
+                              </span>
+                            </div>
+                          )}
                         </div>
+
+                        {/* Upload Photo Button */}
+                        <div className="flex gap-2 justify-center">
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                handlePhotoSelect(e);
+                                const file = e.target.files?.[0];
+                                if (file) handlePhotoUpload(file);
+                              }}
+                              disabled={uploadingPhoto}
+                              className="hidden"
+                            />
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={uploadingPhoto}
+                              className="bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                              onClick={(e) => {
+                                const input = (e.target as HTMLElement)
+                                  .closest("label")
+                                  ?.querySelector("input[type=file]") as HTMLInputElement;
+                                input?.click();
+                              }}
+                            >
+                              <Upload className="w-3 h-3 mr-1" />
+                              {uploadingPhoto ? "Upload..." : "Changer"}
+                            </Button>
+                          </label>
+                          {profileImage && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="destructive"
+                              onClick={handlePhotoDelete}
+                            >
+                              <X className="w-3 h-3 mr-1" />
+                              Supprimer
+                            </Button>
+                          )}
+                        </div>
+
                         <div className="text-center">
                           <p className="font-semibold text-slate-100">
                             {user?.name} {user?.surname}

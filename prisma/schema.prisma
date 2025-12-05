@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "@/generated/prisma"
 }
 
 datasource db {
@@ -24,6 +24,9 @@ model User {
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
   roleId             Int
+  
+  // Profile picture
+  profileImage       String?                              // URL to profile picture stored in Vercel Blob
   
   // Account status flags
   isDeactivated      Boolean      @default(false)          // Temporarily hidden (can be reactivated within 30 days)

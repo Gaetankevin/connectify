@@ -4,11 +4,11 @@ import {
   SignupFormSchema,
   LoginFormSchema,
   FormState,
-} from "./../lib/definitions";
-import { prisma } from "../../lib/prisma";
+} from "@/app/lib/definitions";
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
-import { type User } from "../../generated/prisma/client";
-import { createSession, destroySession } from "../../lib/session";
+import { type User } from "@/generated/prisma/client";
+import { createSession, destroySession } from "@/lib/session";
 
 export async function signup(
   prevState: FormState,

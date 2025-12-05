@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '../../../../lib/prisma'
+import { getUserFromSession } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 
 function sanitize(s: string) {
   return s

@@ -1,7 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { prisma } from "./prisma";
-import { type User } from "../generated/prisma/client";
 
 const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "session";
 const SESSION_DAYS = Number(process.env.SESSION_DAYS || "7");

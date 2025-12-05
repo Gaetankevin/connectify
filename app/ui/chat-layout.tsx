@@ -24,6 +24,7 @@ import {
   X,
   MessageCircle,
   Settings,
+  Divide,
 } from "lucide-react";
 import {
   getConversations,
@@ -66,6 +67,9 @@ export default function ChatLayout() {
     email: string;
     name: string;
     surname: string;
+    isDeactivated?: boolean;
+    deletedAt?: string | null;
+    profileImage?: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -143,12 +147,10 @@ export default function ChatLayout() {
     playBeep();
   };
 
-  useEffect(() => {
-    const iv = setInterval(() => {
-      fetchConversations(true);
-    }, 10000);
-    return () => clearInterval(iv);
-  }, []);
+  // Note: Removed automatic conversation list refresh every 10 seconds.
+  // The message polling (delta polling in the next useEffect) is sufficient.
+  // Frequent conversation refetches cause selectedConvId to reset when list order changes.
+  // Users can manually refresh by navigating or sending messages (which calls fetchConversations).
 
   useEffect(() => {
     if (!selectedConvId) return;
@@ -596,6 +598,23 @@ export default function ChatLayout() {
                           isOwn ? "justify-end" : "justify-start"
                         }`}
                       >
+                        {/* Avatar on left (recipient's avatar when message is from other user) */}
+                        {!isOwn && (
+                          <div className="flex-shrink-0">
+                            {selectedConv.otherUser?.profileImage ? (
+                              <img
+                                src={selectedConv.otherUser.profileImage}
+                                alt={selectedConv.otherUser.name}
+                                className="w-8 h-8 rounded-full object-cover border border-indigo-500"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold text-white">
+                                {selectedConv.otherUser?.name?.charAt(0) || "U"}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <div
                           className={`max-w-xs lg:max-w-md rounded-2xl px-4 py-3 shadow-sm ${
                             isOwn
@@ -632,6 +651,23 @@ export default function ChatLayout() {
                             {formatTime(msg.createdAt)}
                           </p>
                         </div>
+
+                        {/* Avatar on right (current user's avatar when message is from them) */}
+                        {isOwn && (
+                          <div className="flex-shrink-0">
+                            {currentUser?.profileImage ? (
+                              <img
+                                src={currentUser.profileImage}
+                                alt={currentUser.name}
+                                className="w-8 h-8 rounded-full object-cover border border-indigo-500"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white">
+                                {currentUser?.name?.charAt(0) || "U"}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })

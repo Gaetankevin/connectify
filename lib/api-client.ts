@@ -9,6 +9,10 @@ export interface User {
   email: string;
   name: string;
   surname: string;
+  // Optional fields returned by some endpoints (profile image, account status)
+  profileImage?: string | null;
+  isDeactivated?: boolean;
+  deletedAt?: string | null;
 }
 
 export interface Message {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromSession } from "../../../lib/session";
-import { prisma } from "../../../lib/prisma";
+import { getUserFromSession } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/conversations
@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
             name: true,
             surname: true,
             email: true,
+            profileImage: true,
           },
         },
         user2: {
@@ -38,6 +39,7 @@ export async function GET(request: NextRequest) {
             name: true,
             surname: true,
             email: true,
+            profileImage: true,
           },
         },
         messages: {

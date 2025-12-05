@@ -1,4 +1,4 @@
-import { getCurrentUser } from './../../lib/getCurrentUser'
+import { getCurrentUser } from '@/lib/getCurrentUser'
 import { redirect } from 'next/navigation'
 
 export default async function TestSessionPage() {

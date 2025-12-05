@@ -17,6 +17,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+    if (pathname.startsWith("/login" ) || pathname.startsWith("/register")) {
+    const SESSION_COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "session";
+    const cookie = request.cookies.get(SESSION_COOKIE_NAME);
+    if (cookie) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  }
+
   return NextResponse.next();
 }
 

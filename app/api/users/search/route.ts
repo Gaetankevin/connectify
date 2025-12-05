@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../../../../lib/prisma";
+import { getUserFromSession } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/users/search?q=username

@@ -146,7 +146,9 @@ export default function Home() {
             </h1>
 
             <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-              Connectify delivers lightning-fast, secure messaging with intelligent polling optimization. Connect with others instantly and experience the future of communication.
+              Connectify delivers lightning-fast, secure messaging with
+              intelligent polling optimization. Connect with others instantly
+              and experience the future of communication.
             </p>
 
             <motion.div
@@ -233,25 +235,31 @@ export default function Home() {
               <li className="flex gap-3 items-start">
                 <Zap className="w-5 h-5 text-indigo-500 flex-shrink-0 mt-1" />
                 <span>
-                  <strong className="text-slate-100">Adaptive Polling:</strong> Smart interval adjustment based on user activity
+                  <strong className="text-slate-100">Adaptive Polling:</strong>{" "}
+                  Smart interval adjustment based on user activity
                 </span>
               </li>
               <li className="flex gap-3 items-start">
                 <Shield className="w-5 h-5 text-indigo-500 flex-shrink-0 mt-1" />
                 <span>
-                  <strong className="text-slate-100">Secure by Default:</strong> Encrypted sessions and bcrypt hashing
+                  <strong className="text-slate-100">Secure by Default:</strong>{" "}
+                  Encrypted sessions and bcrypt hashing
                 </span>
               </li>
               <li className="flex gap-3 items-start">
                 <Users className="w-5 h-5 text-indigo-500 flex-shrink-0 mt-1" />
                 <span>
-                  <strong className="text-slate-100">Scalable Architecture:</strong> Built for growth with efficient database queries
+                  <strong className="text-slate-100">
+                    Scalable Architecture:
+                  </strong>{" "}
+                  Built for growth with efficient database queries
                 </span>
               </li>
               <li className="flex gap-3 items-start">
                 <Lock className="w-5 h-5 text-indigo-500 flex-shrink-0 mt-1" />
                 <span>
-                  <strong className="text-slate-100">Data Privacy:</strong> Automatic backups to Vercel Blob storage
+                  <strong className="text-slate-100">Data Privacy:</strong>{" "}
+                  Automatic backups to Vercel Blob storage
                 </span>
               </li>
             </ul>
@@ -321,12 +329,12 @@ export default function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6">
+      <section className="py-20  px-6 h-auto justify-center ">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="max-w-4xl mx-auto bg-gradient-to-r from-indigo-600/20 to-blue-600/20 border border-indigo-500/30 rounded-2xl p-12 text-center"
+          className="max-w-4xl h-auto mx-auto bg-gradient-to-r from-indigo-600/20 to-blue-600/20 border border-indigo-500/30 rounded-2xl p-12 text-center"
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Ready to Connect?
@@ -371,31 +379,64 @@ export default function Home() {
           <div>
             <h4 className="font-semibold mb-4">Product</h4>
             <ul className="space-y-2 text-slate-400 text-sm">
-              <li><a href="#" className="hover:text-indigo-400 transition">Features</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition">Pricing</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition">Security</a></li>
+              <li>
+                <a href="#" className="hover:text-indigo-400 transition">
+                  Features
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-indigo-400 transition">
+                  Pricing
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-indigo-400 transition">
+                  Security
+                </a>
+              </li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-semibold mb-4">Resources</h4>
             <ul className="space-y-2 text-slate-400 text-sm">
-              <li><a href="#" className="hover:text-indigo-400 transition">Documentation</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition">API</a></li>
-              <li><a href="#" className="hover:text-indigo-400 transition">Support</a></li>
+              <li>
+                <a href="#" className="hover:text-indigo-400 transition">
+                  Documentation
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-indigo-400 transition">
+                  API
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-indigo-400 transition">
+                  Support
+                </a>
+              </li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-semibold mb-4">Connect</h4>
             <div className="flex gap-4">
-              <a href="#" className="text-slate-400 hover:text-indigo-400 transition">
+              <a
+                href="#"
+                className="text-slate-400 hover:text-indigo-400 transition"
+              >
                 <Github className="w-5 h-5" />
               </a>
-              <a href="#" className="text-slate-400 hover:text-indigo-400 transition">
+              <a
+                href="#"
+                className="text-slate-400 hover:text-indigo-400 transition"
+              >
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="text-slate-400 hover:text-indigo-400 transition">
+              <a
+                href="#"
+                className="text-slate-400 hover:text-indigo-400 transition"
+              >
                 <Mail className="w-5 h-5" />
               </a>
             </div>

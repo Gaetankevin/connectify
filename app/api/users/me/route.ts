@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromSession } from "../../../../lib/session";
-import { prisma } from "../../../../lib/prisma";
+import { getUserFromSession } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
         isDeactivated: true,
         deactivatedAt: true,
         deletedAt: true,
+        profileImage: true,
       },
     });
 
@@ -72,6 +73,7 @@ export async function PATCH(request: NextRequest) {
         isDeactivated: true,
         deactivatedAt: true,
         deletedAt: true,
+        profileImage: true,
       },
     });
 

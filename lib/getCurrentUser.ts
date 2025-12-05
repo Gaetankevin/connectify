@@ -1,4 +1,4 @@
-import { getUserFromSession } from './session'
+import { getUserFromSession } from "@/lib/session";
 
 export async function getCurrentUser() {
   try {

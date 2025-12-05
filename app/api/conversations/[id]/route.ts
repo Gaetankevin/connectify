@@ -1,8 +1,8 @@
 'use server';
 
 import { NextRequest, NextResponse } from "next/server";
-import { getUserFromSession } from "../../../../lib/session";
-import { prisma } from "../../../../lib/prisma";
+import { getUserFromSession } from "@/lib/session";
+import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/conversations/[id]
@@ -35,6 +35,7 @@ export async function GET(
             username: true,
             name: true,
             surname: true,
+            profileImage: true,
           },
         },
         user2: {
@@ -43,6 +44,7 @@ export async function GET(
             username: true,
             name: true,
             surname: true,
+            profileImage: true,
           },
         },
       },
@@ -80,6 +82,7 @@ export async function GET(
             username: true,
             name: true,
             surname: true,
+            profileImage: true,
           },
         },
       },

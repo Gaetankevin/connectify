@@ -1,5 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../generated/prisma/client'
+import { PrismaClient } from '@/generated/prisma/client'
 
 // Avoid importing `dotenv/config` at module-evaluation time because in
 // some Next/Turbopack bundling environments that import runs code that
